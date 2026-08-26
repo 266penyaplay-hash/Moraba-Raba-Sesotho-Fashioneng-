@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // User Profiles
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Player Progression (Campaign Stages, Unlocks, Stars, Badges)
+    match /playerProgression/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Player Mastery & Rating (ELO, Tier, Rivalries)
+    match /playerMastery/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Player Daily Challenges & Streak
+    match /dailyChallenges/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Player Tactical Puzzles Solved
+    match /tacticalPuzzles/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Player Achievements & Honors
+    match /achievements/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Match Records & Analytics
+    match /matches/{matchId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Global High Scores / Leaderboard
+    match /leaderboard/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Online Multiplayer Game Rooms & Invites
+    match /gameRooms/{roomId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null && resource.data.hostId == request.auth.uid;
+    }
+
+    // Player Login & Activity Sessions
+    match /playerSessions/{sessionId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Active Game & Match Play Sessions
+    match /gameSessions/{sessionId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Player Career Profiles & Mode Ledgers
+    match /playerCareer/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Player Head-to-Head & Rivalry Records
+    match /headToHead/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

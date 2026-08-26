@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+@keyframes metallicRidgeShimmer {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes metallicRidgeGlint {
+  0%, 100% {
+    opacity: 0.35;
+    filter: brightness(1);
+  }
+  25% {
+    opacity: 0.70;
+    filter: brightness(1.25);
+  }
+  50% {
+    opacity: 0.45;
+    filter: brightness(1.05);
+  }
+  75% {
+    opacity: 0.85;
+    filter: brightness(1.35);
+  }
+}
+
+@keyframes radialSheenPulse {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes bottleCapRidgeSweep {
+  0% {
+    transform: rotate(0deg);
+    filter: drop-shadow(0 0 2px rgba(255, 245, 220, 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 5px rgba(255, 245, 220, 0.5));
+  }
+  100% {
+    transform: rotate(360deg);
+    filter: drop-shadow(0 0 2px rgba(255, 245, 220, 0.2));
+  }
+}
+
+.animate-ridge-sheen {
+  animation: metallicRidgeShimmer 8s linear infinite;
+  transform-origin: 50px 50px;
+}
+
+.animate-ridge-sweep {
+  animation: bottleCapRidgeSweep 10s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transform-origin: 50px 50px;
+}
+
+.animate-ridge-glint {
+  animation: metallicRidgeGlint 5s ease-in-out infinite;
+}
+
+.animate-face-sheen {
+  animation: metallicRidgeShimmer 16s linear infinite reverse;
+  transform-origin: 50px 50px;
+}
+
+.animate-sheen-pulse {
+  animation: radialSheenPulse 3.5s ease-in-out infinite;
+  transform-origin: 50px 50px;
+}
+
+/* ========================================================================= */
+/* PREMIUM TRANSITION & SLIDE-IN KEYFRAMES (PRE-MATCH LOBBY <-> ACTIVE MATCH) */
+/* ========================================================================= */
+
+@keyframes yinyangBoardEntrance {
+  0% {
+    opacity: 0;
+    transform: rotate(-14deg) scale(0.86) translateY(24px);
+    filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6)) brightness(0.7) blur(2px);
+  }
+  50% {
+    opacity: 0.85;
+    transform: rotate(2.5deg) scale(1.02) translateY(-4px);
+    filter: drop-shadow(0 18px 36px rgba(217, 168, 85, 0.18)) brightness(1.08) blur(0px);
+  }
+  75% {
+    transform: rotate(-0.8deg) scale(0.995) translateY(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1) translateY(0);
+    filter: drop-shadow(0 22px 52px rgba(0, 0, 0, 0.94)) brightness(1);
+  }
+}
+
+@keyframes gameBoardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(32px) scale(0.94);
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4)) blur(3px);
+  }
+  60% {
+    opacity: 0.95;
+    transform: translateY(-3px) scale(1.008);
+    filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.7)) blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 20px 48px rgba(0, 0, 0, 0.92));
+  }
+}
+
+.animate-yinyang-entrance {
+  animation: yinyangBoardEntrance 0.88s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  will-change: transform, opacity, filter;
+  transform-origin: center center;
+}
+
+@keyframes preMatchLobbySlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes matchViewSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hudSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hudSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-board-slide-in {
+  animation: gameBoardSlideIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-lobby-slide-in {
+  animation: preMatchLobbySlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-match-slide-in {
+  animation: matchViewSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-hud-slide-down {
+  animation: hudSlideDown 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-hud-slide-up {
+  animation: hudSlideUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.08s backwards;
+}
+

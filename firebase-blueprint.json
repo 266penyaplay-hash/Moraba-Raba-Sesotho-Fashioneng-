@@ -1,0 +1,203 @@
+{
+  "entities": {
+    "UserProfile": {
+      "collection": "users",
+      "fields": {
+        "userId": { "type": "string", "description": "Firebase Auth UID" },
+        "displayName": { "type": "string", "description": "Player callsign or chief title" },
+        "email": { "type": "string", "description": "Player email" },
+        "photoURL": { "type": "string", "description": "Avatar URL" },
+        "isAnonymous": { "type": "boolean", "description": "Anonymous guest session flag" },
+        "createdAt": { "type": "string", "description": "ISO timestamp" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp" }
+      }
+    },
+    "PlayerProgression": {
+      "collection": "playerProgression",
+      "fields": {
+        "userId": { "type": "string", "description": "Player UID" },
+        "currentStage": { "type": "string", "description": "Active campaign stage ID" },
+        "completedStages": { "type": "array", "description": "List of conquered stage IDs" },
+        "unlockedStages": { "type": "array", "description": "List of accessible stage IDs" },
+        "unlockedZones": { "type": "array", "description": "Unlocked regional zones" },
+        "totalWins": { "type": "number", "description": "Total campaign and multiplayer victories" },
+        "totalMatches": { "type": "number", "description": "Total games played" },
+        "winStreak": { "type": "object", "description": "Current and best win streak" },
+        "stars": { "type": "number", "description": "Total earned stars" },
+        "royalCattleUnlocked": { "type": "boolean", "description": "Royal cattle aesthetic unlocked" },
+        "firestoneBoardUnlocked": { "type": "boolean", "description": "Firestone board cosmetic unlocked" },
+        "bohloaleCrownUnlocked": { "type": "boolean", "description": "Crown avatar cosmetic unlocked" },
+        "beatMorenaAchievementUnlocked": { "type": "boolean", "description": "Morena defeated flag" },
+        "lastSyncedAt": { "type": "string", "description": "Timestamp of last cloud sync" }
+      }
+    },
+    "PlayerMastery": {
+      "collection": "playerMastery",
+      "fields": {
+        "userId": { "type": "string", "description": "Player UID" },
+        "rating": { "type": "number", "description": "Competitive ELO Rating" },
+        "peakRating": { "type": "number", "description": "Highest ELO reached" },
+        "rankTier": { "type": "string", "description": "Basotho rank tier ID" },
+        "totalMatches": { "type": "number", "description": "Total matches recorded" },
+        "totalWins": { "type": "number", "description": "Total victories" },
+        "totalLosses": { "type": "number", "description": "Total losses" },
+        "totalDraws": { "type": "number", "description": "Total stalemates" },
+        "totalMillsFormed": { "type": "number", "description": "Total 3-in-a-row mills created" },
+        "totalMillsPrevented": { "type": "number", "description": "Enemy mills intercepted" },
+        "totalCattleCaptured": { "type": "number", "description": "Enemy cattle shot" },
+        "totalComebacks": { "type": "number", "description": "Comeback victories" },
+        "longestWinStreak": { "type": "number", "description": "Peak consecutive win streak" },
+        "aiRivalries": { "type": "object", "description": "Head-to-head records against AI bosses" },
+        "seasonRecord": { "type": "object", "description": "Current highland season stats" },
+        "lastSyncedAt": { "type": "string", "description": "Sync timestamp" }
+      }
+    },
+    "DailyChallenges": {
+      "collection": "dailyChallenges",
+      "fields": {
+        "userId": { "type": "string", "description": "Player UID" },
+        "currentStreak": { "type": "number", "description": "Consecutive days completed" },
+        "bestStreak": { "type": "number", "description": "Highest daily streak achieved" },
+        "lastCompletedDate": { "type": "string", "description": "YYYY-MM-DD date" },
+        "history": { "type": "object", "description": "Map of completed daily challenge records" },
+        "lastSyncedAt": { "type": "string", "description": "Sync timestamp" }
+      }
+    },
+    "TacticalPuzzles": {
+      "collection": "tacticalPuzzles",
+      "fields": {
+        "userId": { "type": "string", "description": "Player UID" },
+        "solvedPuzzleIds": { "type": "array", "description": "Array of solved tactical puzzle IDs" },
+        "totalSolved": { "type": "number", "description": "Count of solved puzzles" },
+        "lastSyncedAt": { "type": "string", "description": "Sync timestamp" }
+      }
+    },
+    "Achievements": {
+      "collection": "achievements",
+      "fields": {
+        "userId": { "type": "string", "description": "Player UID" },
+        "unlockedAchievements": { "type": "object", "description": "Map of unlocked achievement IDs and dates" },
+        "totalUnlocked": { "type": "number", "description": "Total unlocked honors count" },
+        "lastSyncedAt": { "type": "string", "description": "Sync timestamp" }
+      }
+    },
+    "MatchRecord": {
+      "collection": "matches",
+      "fields": {
+        "matchId": { "type": "string", "description": "Unique match UUID" },
+        "userId": { "type": "string", "description": "Player UID" },
+        "displayName": { "type": "string", "description": "Player display name" },
+        "winner": { "type": "string", "description": "obsidian or ivory or draw" },
+        "stageId": { "type": "string", "description": "Stage played" },
+        "gameMode": { "type": "string", "description": "ai or pvp" },
+        "totalTurns": { "type": "number", "description": "Total turn count" },
+        "playerMoves": { "type": "number", "description": "Player move count" },
+        "playerMills": { "type": "number", "description": "Player mills formed" },
+        "playerMovesPerMill": { "type": "number", "description": "Efficiency rating" },
+        "playerCaptureRatio": { "type": "number", "description": "Capture percentage" },
+        "playerKraalRetention": { "type": "number", "description": "Cattle preserved percentage" },
+        "grade": { "type": "string", "description": "Tactical performance grade" },
+        "createdAt": { "type": "string", "description": "Timestamp" }
+      }
+    },
+    "LeaderboardEntry": {
+      "collection": "leaderboard",
+      "fields": {
+        "userId": { "type": "string", "description": "Player UID" },
+        "displayName": { "type": "string", "description": "Player name or clan title" },
+        "rating": { "type": "number", "description": "Competitive ELO Rating" },
+        "rankTierName": { "type": "string", "description": "Basotho rank tier title" },
+        "rankTierTranslation": { "type": "string", "description": "Rank translation" },
+        "totalWins": { "type": "number", "description": "Total match victories" },
+        "dailyStreak": { "type": "number", "description": "Active daily puzzle streak" },
+        "puzzlesSolved": { "type": "number", "description": "Total tactical puzzles solved" },
+        "honorsCount": { "type": "number", "description": "Total achievements unlocked" },
+        "photoURL": { "type": "string", "description": "Avatar image URL" },
+        "updatedAt": { "type": "string", "description": "Timestamp" }
+      }
+    },
+    "PlayerSession": {
+      "collection": "playerSessions",
+      "fields": {
+        "sessionId": { "type": "string", "description": "Unique session UUID" },
+        "userId": { "type": "string", "description": "Player UID" },
+        "displayName": { "type": "string", "description": "Player callsign" },
+        "email": { "type": "string", "description": "Player email" },
+        "authProvider": { "type": "string", "description": "google.com | password | anonymous" },
+        "isAnonymous": { "type": "boolean", "description": "Guest session flag" },
+        "platform": { "type": "string", "description": "Client platform (web)" },
+        "loginAt": { "type": "string", "description": "ISO login timestamp" }
+      }
+    },
+    "GameSession": {
+      "collection": "gameSessions",
+      "fields": {
+        "sessionId": { "type": "string", "description": "Unique game play session UUID" },
+        "userId": { "type": "string", "description": "Player UID" },
+        "displayName": { "type": "string", "description": "Player display name" },
+        "gameMode": { "type": "string", "description": "ai | pvp | online | daily | puzzle" },
+        "stageId": { "type": "string", "description": "Stage or puzzle ID" },
+        "status": { "type": "string", "description": "started | in_progress | completed | abandoned" },
+        "startedAt": { "type": "string", "description": "ISO start timestamp" },
+        "updatedAt": { "type": "string", "description": "ISO update timestamp" }
+      }
+    },
+    "OnlineGameRoom": {
+      "collection": "gameRooms",
+      "fields": {
+        "id": { "type": "string", "description": "6-character room invite code" },
+        "hostId": { "type": "string", "description": "Host player UID" },
+        "hostName": { "type": "string", "description": "Host player display name" },
+        "hostPhoto": { "type": "string", "description": "Host avatar or clan badge" },
+        "hostClan": { "type": "string", "description": "Host Basotho clan title" },
+        "hostRating": { "type": "number", "description": "Host ELO rating" },
+        "guestId": { "type": "string", "description": "Guest player UID or null" },
+        "guestName": { "type": "string", "description": "Guest player display name" },
+        "guestPhoto": { "type": "string", "description": "Guest avatar or clan badge" },
+        "guestClan": { "type": "string", "description": "Guest Basotho clan title" },
+        "guestRating": { "type": "number", "description": "Guest ELO rating" },
+        "status": { "type": "string", "description": "waiting | ready | playing | completed | abandoned" },
+        "stageId": { "type": "string", "description": "Arena atmosphere and stage id" },
+        "atmosphere": { "type": "string", "description": "Visual atmosphere setting" },
+        "cattleSet": { "type": "string", "description": "Selected cattle token set" },
+        "turn": { "type": "string", "description": "obsidian | ivory" },
+        "phase": { "type": "string", "description": "placing | moving | shooting" },
+        "boardPoints": { "type": "object", "description": "Map of 24 board points state" },
+        "obsidian": { "type": "object", "description": "Host player herd state" },
+        "ivory": { "type": "object", "description": "Guest player herd state" },
+        "winner": { "type": "string", "description": "obsidian | ivory | draw | null" },
+        "moveCount": { "type": "number", "description": "Total moves played" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+      }
+    },
+    "PlayerCareer": {
+      "collection": "playerCareer",
+      "fields": {
+        "userId": { "type": "string", "description": "Player UID" },
+        "displayName": { "type": "string", "description": "Callsign or chief title" },
+        "username": { "type": "string", "description": "Unique player handle" },
+        "country": { "type": "string", "description": "Country identity" },
+        "region": { "type": "string", "description": "Lesotho district / region" },
+        "avatarIcon": { "type": "string", "description": "Avatar badge" },
+        "clanTitle": { "type": "string", "description": "Seboko clan" },
+        "rating": { "type": "number", "description": "Competitive ELO rating" },
+        "peakRating": { "type": "number", "description": "Highest ELO recorded" },
+        "careerXp": { "type": "number", "description": "Total experience points" },
+        "careerLevel": { "type": "number", "description": "Career level tier" },
+        "recordsByMode": { "type": "object", "description": "Separated career records by mode" },
+        "recentForm": { "type": "array", "description": "Recent 5 match results (W, L, D)" },
+        "majorOpponentsDefeated": { "type": "array", "description": "List of conquered bosses" },
+        "prestigeHonors": { "type": "array", "description": "List of prestige badges and honors" },
+        "lastSyncedAt": { "type": "string", "description": "Timestamp" }
+      }
+    },
+    "HeadToHead": {
+      "collection": "headToHead",
+      "fields": {
+        "userId": { "type": "string", "description": "Player UID" },
+        "records": { "type": "array", "description": "List of head-to-head records against opponents" },
+        "lastSyncedAt": { "type": "string", "description": "Timestamp" }
+      }
+    }
+  }
+}
