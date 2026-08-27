@@ -1,87 +1,90 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User Profiles
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isRoomPlayer() {
+      return isSignedIn() && (
+        request.auth.uid == resource.data.hostId ||
+        request.auth.uid == resource.data.guestId ||
+        (resource.data.guestId == null && request.resource.data.guestId == request.auth.uid)
+      );
+    }
+
     match /users/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if isOwner(userId);
     }
 
-    // Player Progression (Campaign Stages, Unlocks, Stars, Badges)
     match /playerProgression/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if isOwner(userId);
     }
 
-    // Player Mastery & Rating (ELO, Tier, Rivalries)
     match /playerMastery/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if isOwner(userId);
     }
 
-    // Player Daily Challenges & Streak
     match /dailyChallenges/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if isOwner(userId);
     }
 
-    // Player Tactical Puzzles Solved
     match /tacticalPuzzles/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if isOwner(userId);
     }
 
-    // Player Achievements & Honors
     match /achievements/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if isOwner(userId);
     }
 
-    // Match Records & Analytics
     match /matches/{matchId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Global High Scores / Leaderboard
     match /leaderboard/{userId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isOwner(userId);
     }
 
-    // Online Multiplayer Game Rooms & Invites
     match /gameRooms/{roomId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
-      allow delete: if request.auth != null && resource.data.hostId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.hostId == request.auth.uid;
+      allow update: if isRoomPlayer();
+      allow delete: if isSignedIn() && resource.data.hostId == request.auth.uid;
     }
 
-    // Player Login & Activity Sessions
     match /playerSessions/{sessionId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Active Game & Match Play Sessions
     match /gameSessions/{sessionId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Player Career Profiles & Mode Ledgers
     match /playerCareer/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if isOwner(userId);
     }
 
-    // Player Head-to-Head & Rivalry Records
     match /headToHead/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if isOwner(userId);
     }
   }
 }
