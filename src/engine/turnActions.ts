@@ -52,7 +52,7 @@ function withMillShootingState(
     statusMessage: isGrand
       ? `${meridian.title || 'GRAND HORIZON DOUBLE MILL'} · CAPTURE 1 OF 2`
       : isDoubleMill
-        ? 'SMOOTH DOUBLE MILL · CAPTURE 2 OF 2'.replace('2 OF 2', '1 OF 2')
+        ? 'SMOOTH DOUBLE MILL · CAPTURE 1 OF 2'
         : 'Mill formed. Choose one opposing token.',
     history: [...state.history, { ...historyEntry, millFormed: true, doubleMill: isDoubleMill, grandMeridian: isGrand }],
   };
