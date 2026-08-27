@@ -402,6 +402,28 @@ export const CareerProfileModal: React.FC<CareerProfileModalProps> = ({
                     </span>
                   </div>
                 </div>
+
+                {/* Grand Horizon Attainments Special Recognition Banner */}
+                {(activeModeStats.grandMeridianCount || 0) > 0 && (
+                  <div className="px-3 py-2 rounded-xl bg-gradient-to-r from-[#2F1E0B] via-[#1E1408] to-[#120D08] border border-[#FFD700]/60 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-[#FFD700]/20 border border-[#FFD700]/50 flex items-center justify-center text-xs text-[#FFD700]">
+                        ⚡
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-['Space_Grotesk'] font-extrabold text-[#FFE79A] uppercase tracking-wider">
+                          Grand Horizon Attainments
+                        </div>
+                        <div className="text-[9px] text-[#D5A351]">
+                          Unbroken Full-Axis Kraal Bisectors
+                        </div>
+                      </div>
+                    </div>
+                    <span className="font-['Syne'] font-extrabold text-base text-[#FFD700]">
+                      {activeModeStats.grandMeridianCount}x
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Recent Form Display */}
@@ -547,6 +569,32 @@ export const CareerProfileModal: React.FC<CareerProfileModalProps> = ({
                           <span className="text-[#52C41A] font-bold">{m.tacticalGrade || 'A'}</span>
                         </div>
                       </div>
+
+                      {/* Grand Horizon Double Mill Legendary Attainment Highlight */}
+                      {Boolean(m.playerGrandMeridianMills && m.playerGrandMeridianMills > 0) && (
+                        <div className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-[#3B2508] via-[#241607] to-[#120D08] border border-[#FFD700] shadow-[0_0_12px_rgba(255,215,0,0.25)] flex items-center justify-between text-[10px] font-mono">
+                          <div className="flex items-center gap-1.5 text-[#FFF6D1] font-bold">
+                            <span className="text-[#FFD700]">⚡</span>
+                            <span className="font-['Space_Grotesk'] tracking-wider uppercase">Grand Horizon Attainment</span>
+                          </div>
+                          <span className="text-[#FFD700] font-bold bg-[#FFD700]/20 px-2 py-0.5 rounded-md border border-[#FFD700]/50">
+                            {m.playerGrandMeridianMills}x Mythic Strike
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Smooth Double Mill Special Historic Highlight */}
+                      {Boolean(m.playerDoubleMills && m.playerDoubleMills > 0) && !Boolean(m.playerGrandMeridianMills && m.playerGrandMeridianMills > 0) && (
+                        <div className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#2A1D0E] to-[#17110A] border border-[#D4AF37]/50 flex items-center justify-between text-[10px] font-mono">
+                          <div className="flex items-center gap-1.5 text-[#FFE79A] font-bold">
+                            <span className="text-[#D4AF37]">✨</span>
+                            <span>Smooth Double Mill</span>
+                          </div>
+                          <span className="text-[#D5A351] font-bold">
+                            {m.playerDoubleMills}x Executed
+                          </span>
+                        </div>
+                      )}
 
                       {/* Expandable Board Snapshot & Details Toggle */}
                       <div className="flex items-center justify-between pt-1 text-[11px] text-[#A89886]">

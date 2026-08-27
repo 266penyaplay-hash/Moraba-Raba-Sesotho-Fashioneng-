@@ -147,6 +147,17 @@ export const INITIAL_PRESTIGE_HONORS: PrestigeHonor[] = [
     rarity: 'RARE',
   },
   {
+    id: 'grand_meridian',
+    title: 'Master of the Grand Horizon',
+    subtitle: 'Lekhala la Metsi · Grand Double Mill',
+    description: 'Executed an unbroken linear Grand Horizon Double Mill bisecting the kraal in a single decisive sweep.',
+    category: 'legend',
+    icon: 'Zap',
+    badgeColor: '#FFD700',
+    unlocked: false,
+    rarity: 'MYTHIC',
+  },
+  {
     id: 'rating_2000',
     title: 'Litolobonya Sovereign',
     subtitle: '2000+ Elo Rating',
@@ -170,6 +181,7 @@ const DEFAULT_MODE_STATS: CareerModeStats = {
   millsFormed: 0,
   millsPrevented: 0,
   cattleCaptured: 0,
+  grandMeridianCount: 0,
   rating: 1200,
 };
 
@@ -512,6 +524,7 @@ export function recordMatchToCareer(params: {
       millsFormed: target.millsFormed + params.stats.playerMills,
       millsPrevented: target.millsPrevented + params.stats.opponentMills,
       cattleCaptured: target.cattleCaptured + params.stats.playerCaptures,
+      grandMeridianCount: (target.grandMeridianCount || 0) + (params.stats.playerGrandMeridianMills || 0),
       rating: isCompetitiveMode ? ratingAfter : target.rating,
     };
   };
@@ -567,6 +580,10 @@ export function recordMatchToCareer(params: {
     opponentCaptures: params.stats.opponentCaptures,
     playerMills: params.stats.playerMills,
     opponentMills: params.stats.opponentMills,
+    playerDoubleMills: params.stats.playerDoubleMills || 0,
+    opponentDoubleMills: params.stats.opponentDoubleMills || 0,
+    playerGrandMeridianMills: params.stats.playerGrandMeridianMills || 0,
+    opponentGrandMeridianMills: params.stats.opponentGrandMeridianMills || 0,
     ratingBefore,
     ratingAfter,
     ratingDelta,
@@ -651,6 +668,8 @@ export function recordMatchToCareer(params: {
     } else if (honor.id === 'lethal_tempo' && isPlayerWin && params.stats.grade === 'S+') {
       shouldUnlock = true;
     } else if (honor.id === 'comeback_king' && isPlayerWin && params.wasComeback) {
+      shouldUnlock = true;
+    } else if (honor.id === 'grand_meridian' && (params.stats.playerGrandMeridianMills ?? 0) > 0) {
       shouldUnlock = true;
     } else if (honor.id === 'rating_2000' && ratingAfter >= 2000) {
       shouldUnlock = true;

@@ -14,6 +14,7 @@ import {
 import {
   getInitialGameState,
   checkMillsForPoint,
+  checkGrandMeridianLine,
   getCapturablePoints,
   determinePhase,
   getLegalMovesForPoint,
@@ -683,15 +684,34 @@ export default function App() {
       // Check for Mill Formation
       const formedMills = checkMillsForPoint(pointId, currentPlayer, newPoints);
       if (formedMills.length > 0) {
-        sound.playMill();
-        triggerBoardShake('heavy');
+        const isDoubleMill = formedMills.length >= 2;
+        const millLines = formedMills.map((m) => m.points);
+        const meridianCheck = isDoubleMill ? checkGrandMeridianLine(formedMills, pointId, currentPlayer, newPoints) : { isGrandMeridian: false, axis: null, meridianPoints: [] };
+        const isGrand = isDoubleMill && meridianCheck.isGrandMeridian;
+
+        if (isGrand) {
+          sound.playGrandMeridian();
+          triggerBoardShake('heavy');
+          if (gameState.isAiOpponent) {
+            setLiveDialogue("Spectator: 'LEKHALA LA METSI! The Mythic Grand Horizon Double Mill spans the Kraal!'");
+          }
+        } else if (isDoubleMill) {
+          sound.playSmoothDoubleMill();
+          triggerBoardShake('heavy');
+          if (gameState.isAiOpponent) {
+            setLiveDialogue("Spectator: 'Bohlale bo boholo! An immaculate Smooth Double Mill!'");
+          }
+        } else {
+          sound.playMill();
+          triggerBoardShake('heavy');
+          if (currentPlayer === 'obsidian' && !hasTriggeredFirstMill && gameState.isAiOpponent) {
+            setHasTriggeredFirstMill(true);
+            setLiveDialogue(activeStage.dialogues.onPlayerFirstMill[0]);
+          }
+        }
+
         const targets = getCapturablePoints(opponent, newPoints);
         setCapturablePoints(targets);
-
-        if (currentPlayer === 'obsidian' && !hasTriggeredFirstMill && gameState.isAiOpponent) {
-          setHasTriggeredFirstMill(true);
-          setLiveDialogue(activeStage.dialogues.onPlayerFirstMill[0]);
-        }
 
         const shootingState: GameState = {
           ...gameState,
@@ -699,15 +719,63 @@ export default function App() {
           [currentPlayer]: curPlayerState,
           phase: 'shooting',
           flashMill: formedMills[0].points,
-          statusMessage: 'Mill formed. Choose one opposing token.',
+          activeMillLines: millLines,
+          isDoubleMill,
+          isGrandMeridian: isGrand,
+          grandMeridianAxis: meridianCheck.axis,
+          grandMeridianPoints: meridianCheck.meridianPoints,
+          capturesRemaining: isDoubleMill ? 2 : 1,
+          totalCapturesInSequence: isDoubleMill ? 2 : 1,
+          doubleMillAnimation: isDoubleMill
+            ? {
+                active: true,
+                player: currentPlayer,
+                centerPointId: pointId,
+                mills: millLines,
+                stage: 'drawing',
+                isGrandMeridian: isGrand,
+                meridianAxis: meridianCheck.axis,
+                meridianPoints: meridianCheck.meridianPoints,
+              }
+            : null,
+          statusMessage: isGrand
+            ? 'GRAND HORIZON DOUBLE MILL · CAPTURE 1 OF 2'
+            : isDoubleMill
+            ? 'SMOOTH DOUBLE MILL · CAPTURE 1 OF 2'
+            : 'Mill formed. Choose one opposing token.',
           history: [
             ...gameState.history,
-            { to: pointId, player: currentPlayer, type: 'place', millFormed: true },
+            {
+              to: pointId,
+              player: currentPlayer,
+              type: 'place',
+              millFormed: true,
+              doubleMill: isDoubleMill,
+              grandMeridian: isGrand,
+            },
           ],
         };
         setGameState(shootingState);
         if (activeOnlineRoom) {
-          syncToOnlineRoom(shootingState, { to: pointId, player: currentPlayer, type: 'place', millFormed: true });
+          syncToOnlineRoom(shootingState, {
+            to: pointId,
+            player: currentPlayer,
+            type: 'place',
+            millFormed: true,
+            doubleMill: isDoubleMill,
+          });
+        }
+
+        if (isDoubleMill) {
+          setTimeout(() => {
+            setGameState((prev) => {
+              if (!prev.doubleMillAnimation) return prev;
+              return {
+                ...prev,
+                doubleMillAnimation: null,
+              };
+            });
+          }, 1600);
         }
         return;
       }
@@ -720,6 +788,10 @@ export default function App() {
         [currentPlayer]: curPlayerState,
         phase: nextPhase,
         flashMill: null,
+        activeMillLines: [],
+        isDoubleMill: false,
+        capturesRemaining: 0,
+        doubleMillAnimation: null,
         history: [
           ...gameState.history,
           { to: pointId, player: currentPlayer, type: 'place' },
@@ -780,14 +852,33 @@ export default function App() {
         // Check for Mill
         const formedMills = checkMillsForPoint(pointId, currentPlayer, newPoints);
         if (formedMills.length > 0) {
-          sound.playMill();
-          triggerBoardShake('heavy');
+          const isDoubleMill = formedMills.length >= 2;
+          const millLines = formedMills.map((m) => m.points);
+          const meridianCheck = isDoubleMill ? checkGrandMeridianLine(formedMills, pointId, currentPlayer, newPoints) : { isGrandMeridian: false, axis: null, meridianPoints: [] };
+          const isGrand = isDoubleMill && meridianCheck.isGrandMeridian;
+
+          if (isGrand) {
+            sound.playGrandMeridian();
+            triggerBoardShake('heavy');
+            if (gameState.isAiOpponent) {
+              setLiveDialogue("Spectator: 'LEKHALA LA METSI! The Mythic Grand Horizon Double Mill spans the Kraal!'");
+            }
+          } else if (isDoubleMill) {
+            sound.playSmoothDoubleMill();
+            triggerBoardShake('heavy');
+            if (gameState.isAiOpponent) {
+              setLiveDialogue("Spectator: 'Bohlale bo boholo! An immaculate Smooth Double Mill!'");
+            }
+          } else {
+            sound.playMill();
+            triggerBoardShake('heavy');
+            if (currentPlayer === 'obsidian' && gameState.isAiOpponent && Math.random() > 0.4) {
+              setLiveDialogue(activeStage.dialogues.onPlayerFirstMill[0]);
+            }
+          }
+
           const targets = getCapturablePoints(opponent, newPoints);
           setCapturablePoints(targets);
-
-          if (currentPlayer === 'obsidian' && gameState.isAiOpponent && Math.random() > 0.4) {
-            setLiveDialogue(activeStage.dialogues.onPlayerFirstMill[0]);
-          }
 
           const shootingState: GameState = {
             ...gameState,
@@ -796,15 +887,65 @@ export default function App() {
             validTargets: [],
             phase: 'shooting',
             flashMill: formedMills[0].points,
-            statusMessage: 'Mill formed. Choose one opposing token.',
+            activeMillLines: millLines,
+            isDoubleMill,
+            isGrandMeridian: isGrand,
+            grandMeridianAxis: meridianCheck.axis,
+            grandMeridianPoints: meridianCheck.meridianPoints,
+            capturesRemaining: isDoubleMill ? 2 : 1,
+            totalCapturesInSequence: isDoubleMill ? 2 : 1,
+            doubleMillAnimation: isDoubleMill
+              ? {
+                  active: true,
+                  player: currentPlayer,
+                  centerPointId: pointId,
+                  mills: millLines,
+                  stage: 'drawing',
+                  isGrandMeridian: isGrand,
+                  meridianAxis: meridianCheck.axis,
+                  meridianPoints: meridianCheck.meridianPoints,
+                }
+              : null,
+            statusMessage: isGrand
+              ? 'GRAND HORIZON DOUBLE MILL · CAPTURE 1 OF 2'
+              : isDoubleMill
+              ? 'SMOOTH DOUBLE MILL · CAPTURE 1 OF 2'
+              : 'Mill formed. Choose one opposing token.',
             history: [
               ...gameState.history,
-              { from: fromId, to: pointId, player: currentPlayer, type: 'move', millFormed: true },
+              {
+                from: fromId,
+                to: pointId,
+                player: currentPlayer,
+                type: 'move',
+                millFormed: true,
+                doubleMill: isDoubleMill,
+                grandMeridian: isGrand,
+              },
             ],
           };
           setGameState(shootingState);
           if (activeOnlineRoom) {
-            syncToOnlineRoom(shootingState, { from: fromId, to: pointId, player: currentPlayer, type: 'move', millFormed: true });
+            syncToOnlineRoom(shootingState, {
+              from: fromId,
+              to: pointId,
+              player: currentPlayer,
+              type: 'move',
+              millFormed: true,
+              doubleMill: isDoubleMill,
+            });
+          }
+
+          if (isDoubleMill) {
+            setTimeout(() => {
+              setGameState((prev) => {
+                if (!prev.doubleMillAnimation) return prev;
+                return {
+                  ...prev,
+                  doubleMillAnimation: null,
+                };
+              });
+            }, 1600);
           }
           return;
         }
@@ -815,6 +956,10 @@ export default function App() {
           selectedPointId: null,
           validTargets: [],
           flashMill: null,
+          activeMillLines: [],
+          isDoubleMill: false,
+          capturesRemaining: 0,
+          doubleMillAnimation: null,
           history: [
             ...gameState.history,
             { from: fromId, to: pointId, player: currentPlayer, type: 'move' },
@@ -839,6 +984,9 @@ export default function App() {
     // PHASE 4: SHOOTING / CAPTURE PHASE
     // -------------------------------------------------------------
     if (gameState.phase === 'shooting') {
+      // If double mill animation is currently active (brief freeze), block capture until freeze finishes
+      if (gameState.doubleMillAnimation?.active) return;
+
       if (point.piece !== opponent) return; // Must click opponent token
       
       // Calculate capturable targets dynamically to avoid stale closure
@@ -869,6 +1017,10 @@ export default function App() {
           [opponent]: oppPlayerState,
           winner: currentPlayer,
           flashMill: null,
+          activeMillLines: [],
+          isDoubleMill: false,
+          capturesRemaining: 0,
+          doubleMillAnimation: null,
           statusMessage: `${currentPlayer === 'obsidian' ? 'PLAYER 01' : 'PLAYER 02'} has captured the kraal!`,
           history: [
             ...gameState.history,
@@ -884,12 +1036,40 @@ export default function App() {
         return;
       }
 
-      // Check for Sotho 25 Trapped Player & Forced Opening Transition
+      // If this was a Smooth Double Mill with 2 captures and we just made capture 1:
+      if (gameState.isDoubleMill && (gameState.capturesRemaining ?? 1) > 1) {
+        const nextCapturables = getCapturablePoints(opponent, newPoints);
+        setCapturablePoints(nextCapturables);
+
+        const intermediateState: GameState = {
+          ...gameState,
+          points: newPoints,
+          [opponent]: oppPlayerState,
+          capturesRemaining: 1,
+          totalCapturesInSequence: 2,
+          statusMessage: 'SMOOTH DOUBLE MILL · CAPTURE 2 OF 2',
+          history: [
+            ...gameState.history,
+            { to: pointId, player: currentPlayer, type: 'shoot' },
+          ],
+        };
+        setGameState(intermediateState);
+        if (activeOnlineRoom) {
+          syncToOnlineRoom(intermediateState, { to: pointId, player: currentPlayer, type: 'shoot' });
+        }
+        return;
+      }
+
+      // Sequence complete (single mill or 2nd capture of double mill)
       const baseState: GameState = {
         ...gameState,
         points: newPoints,
         [opponent]: oppPlayerState,
         flashMill: null,
+        activeMillLines: [],
+        isDoubleMill: false,
+        capturesRemaining: 0,
+        doubleMillAnimation: null,
         history: [
           ...gameState.history,
           { to: pointId, player: currentPlayer, type: 'shoot' },
@@ -911,6 +1091,7 @@ export default function App() {
   // Dedicated atomic AI turn execution
   const executeAiTurn = useCallback(() => {
     if (gameState.winner || gameState.turn !== 'ivory' || !gameState.isAiOpponent) return;
+    if (gameState.doubleMillAnimation?.active) return; // Wait for freeze animation to finish
 
     // Reset Turn Clock on AI action
     setTurnTimeRemaining(stageTurnTime);
@@ -919,7 +1100,16 @@ export default function App() {
     if (gameState.phase === 'shooting') {
       const capturables = getCapturablePoints('obsidian', gameState.points);
       if (capturables.length === 0) {
-        const baseState = { ...gameState, flashMill: null, selectedPointId: null, validTargets: [] };
+        const baseState = {
+          ...gameState,
+          flashMill: null,
+          activeMillLines: [],
+          isDoubleMill: false,
+          capturesRemaining: 0,
+          doubleMillAnimation: null,
+          selectedPointId: null,
+          validTargets: [],
+        };
         const nextState = resolveTurnTransitionAfterMove(baseState, 'ivory');
         setGameState(nextState);
         return;
@@ -944,6 +1134,10 @@ export default function App() {
           obsidian: oppPlayerState,
           winner: 'ivory',
           flashMill: null,
+          activeMillLines: [],
+          isDoubleMill: false,
+          capturesRemaining: 0,
+          doubleMillAnimation: null,
           selectedPointId: null,
           validTargets: [],
           statusMessage: `${activeStage.opponentName} has captured the kraal!`,
@@ -958,11 +1152,34 @@ export default function App() {
         return;
       }
 
+      // If this was a Smooth Double Mill with 2 captures and AI just made capture 1:
+      if (gameState.isDoubleMill && (gameState.capturesRemaining ?? 1) > 1) {
+        const intermediateState: GameState = {
+          ...gameState,
+          points: newPoints,
+          obsidian: oppPlayerState,
+          capturesRemaining: 1,
+          totalCapturesInSequence: 2,
+          statusMessage: 'SMOOTH DOUBLE MILL · CAPTURE 2 OF 2',
+          history: [
+            ...gameState.history,
+            { to: captureId, player: 'ivory', type: 'shoot' },
+          ],
+        };
+        setGameState(intermediateState);
+        return;
+      }
+
+      // Sequence complete
       const baseState: GameState = {
         ...gameState,
         points: newPoints,
         obsidian: oppPlayerState,
         flashMill: null,
+        activeMillLines: [],
+        isDoubleMill: false,
+        capturesRemaining: 0,
+        doubleMillAnimation: null,
         selectedPointId: null,
         validTargets: [],
         history: [
@@ -1005,50 +1222,85 @@ export default function App() {
       const formedMills = checkMillsForPoint(move.to, 'ivory', newPoints);
 
       if (formedMills.length > 0) {
-        sound.playMill();
-        triggerBoardShake('heavy');
+        const isDoubleMill = formedMills.length >= 2;
+        const millLines = formedMills.map((m) => m.points);
+        const meridianCheck = isDoubleMill ? checkGrandMeridianLine(formedMills, move.to, 'ivory', newPoints) : { isGrandMeridian: false, axis: null, meridianPoints: [] };
+        const isGrand = isDoubleMill && meridianCheck.isGrandMeridian;
+
+        if (isGrand) {
+          sound.playGrandMeridian();
+          triggerBoardShake('heavy');
+          setLiveDialogue(`Spectator: 'LEKHALA LA METSI! ${activeStage.opponentName} executed the Mythic Grand Horizon Double Mill!'`);
+        } else if (isDoubleMill) {
+          sound.playSmoothDoubleMill();
+          triggerBoardShake('heavy');
+          setLiveDialogue(`Spectator: 'Bohlale bo boholo! An immaculate Smooth Double Mill by ${activeStage.opponentName}!'`);
+        } else {
+          sound.playMill();
+          triggerBoardShake('heavy');
+        }
+
         const capturables = getCapturablePoints('obsidian', newPoints);
 
-        let captureId: string | null = null;
-        if (capturables.length > 0) {
-          captureId =
-            move.capturePointId && capturables.includes(move.capturePointId)
-              ? move.capturePointId
-              : selectAiCapture(capturables, 'obsidian', newPoints, 'placing', activeStage.profile);
+        const shootingState: GameState = {
+          ...gameState,
+          points: newPoints,
+          ivory: curPlayerState,
+          phase: 'shooting',
+          flashMill: formedMills[0].points,
+          activeMillLines: millLines,
+          isDoubleMill,
+          isGrandMeridian: isGrand,
+          grandMeridianAxis: meridianCheck.axis,
+          grandMeridianPoints: meridianCheck.meridianPoints,
+          capturesRemaining: isDoubleMill ? 2 : 1,
+          totalCapturesInSequence: isDoubleMill ? 2 : 1,
+          doubleMillAnimation: isDoubleMill
+            ? {
+                active: true,
+                player: 'ivory',
+                centerPointId: move.to,
+                mills: millLines,
+                stage: 'drawing',
+                isGrandMeridian: isGrand,
+                meridianAxis: meridianCheck.axis,
+                meridianPoints: meridianCheck.meridianPoints,
+              }
+            : null,
+          statusMessage: isGrand
+            ? 'GRAND HORIZON DOUBLE MILL · CAPTURE 1 OF 2'
+            : isDoubleMill
+            ? 'SMOOTH DOUBLE MILL · CAPTURE 1 OF 2'
+            : `${activeStage.opponentName} formed a mill!`,
+          selectedPointId: null,
+          validTargets: [],
+          history: [
+            ...gameState.history,
+            {
+              to: move.to,
+              player: 'ivory',
+              type: 'place',
+              millFormed: true,
+              doubleMill: isDoubleMill,
+              grandMeridian: isGrand,
+            },
+          ],
+        };
+        setGameState(shootingState);
+        setCapturablePoints(capturables);
+
+        if (isDoubleMill) {
+          setTimeout(() => {
+            setGameState((prev) => {
+              if (!prev.doubleMillAnimation) return prev;
+              return {
+                ...prev,
+                doubleMillAnimation: null,
+              };
+            });
+          }, 1600);
         }
-
-        if (captureId) {
-          sound.playCapture();
-          newPoints[captureId] = { ...newPoints[captureId], piece: null };
-
-          const oppPlayerState = { ...gameState.obsidian };
-          oppPlayerState.onBoard -= 1;
-          oppPlayerState.captured += 1;
-
-          const baseState: GameState = {
-            ...gameState,
-            points: newPoints,
-            ivory: curPlayerState,
-            obsidian: oppPlayerState,
-            phase: determinePhase(curPlayerState),
-            flashMill: formedMills[0].points,
-            selectedPointId: null,
-            validTargets: [],
-            history: [
-              ...gameState.history,
-              { to: move.to, player: 'ivory', type: 'place', millFormed: true },
-              { to: captureId, player: 'ivory', type: 'shoot' },
-            ],
-          };
-
-          const nextState = resolveTurnTransitionAfterMove(baseState, 'ivory');
-          if (nextState.winner) {
-            handleMatchVictory(nextState.winner);
-          }
-          setGameState(nextState);
-          setCapturablePoints([]);
-          return;
-        }
+        return;
       }
 
       // No mill on place
@@ -1059,6 +1311,10 @@ export default function App() {
         ivory: curPlayerState,
         phase: nextPhase,
         flashMill: null,
+        activeMillLines: [],
+        isDoubleMill: false,
+        capturesRemaining: 0,
+        doubleMillAnimation: null,
         selectedPointId: null,
         validTargets: [],
         history: [
@@ -1082,12 +1338,6 @@ export default function App() {
 
       if (!fromId || !toId) return;
 
-      // 5-POINT MOVE VALIDATION FOR AI:
-      // 1. Origin contains player's cow
-      // 2. Destination is empty
-      // 3. Origin and destination are directly connected on the board
-      // 4. The move belongs to the player whose turn it is
-      // 5. Only then may the board state update
       const validation = validateMove(fromId, toId, 'ivory', gameState.turn, gameState.points);
       if (!validation.valid) {
         console.warn('AI attempted illegal move rejected:', validation.reason);
@@ -1104,70 +1354,85 @@ export default function App() {
       const formedMills = checkMillsForPoint(toId, 'ivory', newPoints);
 
       if (formedMills.length > 0) {
-        sound.playMill();
-        triggerBoardShake('heavy');
+        const isDoubleMill = formedMills.length >= 2;
+        const millLines = formedMills.map((m) => m.points);
+        const meridianCheck = isDoubleMill ? checkGrandMeridianLine(formedMills, toId, 'ivory', newPoints) : { isGrandMeridian: false, axis: null, meridianPoints: [] };
+        const isGrand = isDoubleMill && meridianCheck.isGrandMeridian;
+
+        if (isGrand) {
+          sound.playGrandMeridian();
+          triggerBoardShake('heavy');
+          setLiveDialogue(`Spectator: 'LEKHALA LA METSI! ${activeStage.opponentName} executed the Mythic Grand Horizon Double Mill!'`);
+        } else if (isDoubleMill) {
+          sound.playSmoothDoubleMill();
+          triggerBoardShake('heavy');
+          setLiveDialogue(`Spectator: 'Bohlale bo boholo! An immaculate Smooth Double Mill by ${activeStage.opponentName}!'`);
+        } else {
+          sound.playMill();
+          triggerBoardShake('heavy');
+        }
+
         const capturables = getCapturablePoints('obsidian', newPoints);
 
-        let captureId: string | null = null;
-        if (capturables.length > 0) {
-          captureId =
-            move.capturePointId && capturables.includes(move.capturePointId)
-              ? move.capturePointId
-              : selectAiCapture(capturables, 'obsidian', newPoints, gameState.phase, activeStage.profile);
+        const shootingState: GameState = {
+          ...gameState,
+          points: newPoints,
+          phase: 'shooting',
+          flashMill: formedMills[0].points,
+          activeMillLines: millLines,
+          isDoubleMill,
+          isGrandMeridian: isGrand,
+          grandMeridianAxis: meridianCheck.axis,
+          grandMeridianPoints: meridianCheck.meridianPoints,
+          capturesRemaining: isDoubleMill ? 2 : 1,
+          totalCapturesInSequence: isDoubleMill ? 2 : 1,
+          doubleMillAnimation: isDoubleMill
+            ? {
+                active: true,
+                player: 'ivory',
+                centerPointId: toId,
+                mills: millLines,
+                stage: 'drawing',
+                isGrandMeridian: isGrand,
+                meridianAxis: meridianCheck.axis,
+                meridianPoints: meridianCheck.meridianPoints,
+              }
+            : null,
+          statusMessage: isGrand
+            ? 'GRAND HORIZON DOUBLE MILL · CAPTURE 1 OF 2'
+            : isDoubleMill
+            ? 'SMOOTH DOUBLE MILL · CAPTURE 1 OF 2'
+            : `${activeStage.opponentName} formed a mill!`,
+          selectedPointId: null,
+          validTargets: [],
+          history: [
+            ...gameState.history,
+            {
+              from: fromId,
+              to: toId,
+              player: 'ivory',
+              type: 'move',
+              millFormed: true,
+              doubleMill: isDoubleMill,
+              grandMeridian: isGrand,
+            },
+          ],
+        };
+        setGameState(shootingState);
+        setCapturablePoints(capturables);
+
+        if (isDoubleMill) {
+          setTimeout(() => {
+            setGameState((prev) => {
+              if (!prev.doubleMillAnimation) return prev;
+              return {
+                ...prev,
+                doubleMillAnimation: null,
+              };
+            });
+          }, 1600);
         }
-
-        if (captureId) {
-          sound.playCapture();
-          newPoints[captureId] = { ...newPoints[captureId], piece: null };
-
-          const oppPlayerState = { ...gameState.obsidian };
-          oppPlayerState.onBoard -= 1;
-          oppPlayerState.captured += 1;
-
-          if (oppPlayerState.inHand === 0 && oppPlayerState.onBoard < 3) {
-            const victoryState: GameState = {
-              ...gameState,
-              points: newPoints,
-              obsidian: oppPlayerState,
-              winner: 'ivory',
-              flashMill: null,
-              selectedPointId: null,
-              validTargets: [],
-              statusMessage: `${activeStage.opponentName} has captured the kraal!`,
-              history: [
-                ...gameState.history,
-                { from: fromId, to: toId, player: 'ivory', type: 'move', millFormed: true },
-                { to: captureId, player: 'ivory', type: 'shoot' },
-              ],
-            };
-            setGameState(victoryState);
-            setCapturablePoints([]);
-            handleMatchVictory('ivory');
-            return;
-          }
-
-          const baseState: GameState = {
-            ...gameState,
-            points: newPoints,
-            obsidian: oppPlayerState,
-            flashMill: formedMills[0].points,
-            selectedPointId: null,
-            validTargets: [],
-            history: [
-              ...gameState.history,
-              { from: fromId, to: toId, player: 'ivory', type: 'move', millFormed: true },
-              { to: captureId, player: 'ivory', type: 'shoot' },
-            ],
-          };
-
-          const nextState = resolveTurnTransitionAfterMove(baseState, 'ivory');
-          if (nextState.winner) {
-            handleMatchVictory(nextState.winner);
-          }
-          setGameState(nextState);
-          setCapturablePoints([]);
-          return;
-        }
+        return;
       }
 
       // No mill formed on move
@@ -1175,6 +1440,10 @@ export default function App() {
         ...gameState,
         points: newPoints,
         flashMill: null,
+        activeMillLines: [],
+        isDoubleMill: false,
+        capturesRemaining: 0,
+        doubleMillAnimation: null,
         selectedPointId: null,
         validTargets: [],
         history: [
@@ -1203,6 +1472,7 @@ export default function App() {
       gameState.isAiOpponent &&
       gameState.turn === 'ivory' &&
       !gameState.winner &&
+      !gameState.doubleMillAnimation?.active &&
       view === 'game'
     ) {
       // Proportional thinking delay based on difficulty depth
@@ -1220,6 +1490,8 @@ export default function App() {
     gameState.winner,
     gameState.isAiOpponent,
     gameState.moveCount,
+    gameState.capturesRemaining,
+    gameState.doubleMillAnimation?.active,
     view,
     activeStage.stageNumber,
     executeAiTurn,
@@ -1507,7 +1779,15 @@ export default function App() {
                 validTargets={gameState.validTargets}
                 capturablePoints={capturablePoints}
                 flashMill={gameState.flashMill}
+                activeMillLines={gameState.activeMillLines}
                 lastMove={lastMoveHighlight}
+                doubleMillAnimation={gameState.doubleMillAnimation}
+                isDoubleMill={gameState.isDoubleMill}
+                isGrandMeridian={gameState.isGrandMeridian}
+                grandMeridianAxis={gameState.grandMeridianAxis}
+                grandMeridianPoints={gameState.grandMeridianPoints}
+                capturesRemaining={gameState.capturesRemaining}
+                totalCapturesInSequence={gameState.totalCapturesInSequence}
                 onPointClick={handlePointClick}
                 stageId={gameState.difficultyStage}
                 atmosphere={atmosphere}

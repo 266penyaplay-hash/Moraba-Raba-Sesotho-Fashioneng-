@@ -352,46 +352,15 @@ export const WeatherEffects: React.FC<WeatherEffectsProps> = ({
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[1] overflow-hidden select-none">
-      {/* Dynamic Screen Flash for Lightning */}
+      {/* Dynamic Ambient Screen Flash for Lightning (Natural atmospheric luminescence) */}
       {lightningFlash > 0 && (
         <div
-          className="absolute inset-0 bg-[#E8F2FF] transition-opacity duration-75 mix-blend-screen pointer-events-none z-[3]"
-          style={{ opacity: lightningFlash }}
+          className="absolute inset-0 bg-[#D4E8FF] transition-opacity duration-75 mix-blend-screen pointer-events-none z-[3]"
+          style={{ opacity: lightningFlash * 0.7 }}
         />
       )}
 
-      {/* SVG Lightning Bolt Geometry */}
-      {lightningBolt && (
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none z-[2] filter drop-shadow-[0_0_12px_#A8D5FF]"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <linearGradient id="bolt-gradient" x1="0" y1="0" x2="0" y2="100%">
-              <stop offset="0%" stopColor="#FFFFFF" />
-              <stop offset="50%" stopColor="#CBE6FF" />
-              <stop offset="100%" stopColor="#80B8FF" />
-            </linearGradient>
-          </defs>
-          <path
-            d={lightningBolt.path}
-            fill="none"
-            stroke="url(#bolt-gradient)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            strokeLinejoin="miter"
-          />
-          <path
-            d={lightningBolt.path}
-            fill="none"
-            stroke="#FFFFFF"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-        </svg>
-      )}
-
-      {/* Canvas for Particle Rendering */}
+      {/* Canvas for Particle Rendering (Rain, Snow, Mountain Mist, Dust Motes, Campfire Embers) */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
     </div>
   );

@@ -133,6 +133,128 @@ class BasothoSoundEngine {
     }
   }
 
+  // Distinctive Deep Multi-Harmonic Bronze Chime for Smooth Double Mill
+  playSmoothDoubleMill() {
+    if (!this.enabled) return;
+    try {
+      this.initCtx();
+      if (!this.ctx) return;
+
+      const now = this.ctx.currentTime;
+      // Rich low bronze harmonic chord (low A/E fundamental with shimmering overtones)
+      const frequencies = [110.0, 164.81, 220.0, 329.63, 440.0, 659.25, 880.0];
+
+      frequencies.forEach((freq, idx) => {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        // Fundamental tones use triangle for warm body; high overtones use sine for crystal resonance
+        osc.type = idx < 2 ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+
+        const initialVol = idx === 0 ? 0.45 : idx === 1 ? 0.38 : 0.22 / Math.sqrt(idx + 1);
+        gain.gain.setValueAtTime(initialVol, now);
+        // Deep long sustained golden ring
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.8);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 2.8);
+      });
+
+      // Layer 2: Shimmering secondary bell strike on top after 120ms
+      setTimeout(() => {
+        if (!this.ctx) return;
+        const subNow = this.ctx.currentTime;
+        const highFreqs = [523.25, 659.25, 1046.5];
+        highFreqs.forEach((hFreq, hIdx) => {
+          if (!this.ctx) return;
+          const oscH = this.ctx.createOscillator();
+          const gainH = this.ctx.createGain();
+          oscH.type = 'sine';
+          oscH.frequency.setValueAtTime(hFreq, subNow);
+          gainH.gain.setValueAtTime(0.16 / (hIdx + 1), subNow);
+          gainH.gain.exponentialRampToValueAtTime(0.0001, subNow + 2.2);
+          oscH.connect(gainH);
+          gainH.connect(this.ctx.destination);
+          oscH.start(subNow);
+          oscH.stop(subNow + 2.2);
+        });
+      }, 120);
+
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate?.([40, 60, 40, 80]);
+      }
+    } catch {
+      // AudioContext fail-safe fallback
+    }
+  }
+
+  // Grand Meridian / Horizon Double Mill: Majestic Ascending Celestial Chord & Gong
+  playGrandMeridian() {
+    if (!this.enabled) return;
+    try {
+      this.initCtx();
+      if (!this.ctx) return;
+
+      const now = this.ctx.currentTime;
+      // Grand resonant open 5th / Octave royal fanfare frequencies:
+      // D2 (73.42Hz), A2 (110Hz), D3 (146.83Hz), F#3 (185Hz), A3 (220Hz), D4 (293.66Hz), F#4 (369.99Hz), A4 (440Hz), D5 (587.33Hz)
+      const fanfareFreqs = [73.42, 110.0, 146.83, 220.0, 293.66, 440.0, 587.33, 880.0];
+
+      fanfareFreqs.forEach((freq, idx) => {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        // Staggered ascending chime cascade (arpeggiated beam sweep)
+        const noteStart = now + idx * 0.045;
+        osc.type = idx < 2 ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(freq, noteStart);
+
+        const initialVol = idx < 2 ? 0.55 : idx < 4 ? 0.35 : 0.25;
+        gain.gain.setValueAtTime(0.0001, noteStart);
+        gain.gain.exponentialRampToValueAtTime(initialVol, noteStart + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + 3.4);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(noteStart);
+        osc.stop(noteStart + 3.5);
+      });
+
+      // Layer 2: Shimmering Celestial Crystal Halo at peak
+      setTimeout(() => {
+        if (!this.ctx) return;
+        const peakNow = this.ctx.currentTime;
+        const crystalFreqs = [1174.66, 1318.51, 1760.0];
+        crystalFreqs.forEach((cFreq) => {
+          if (!this.ctx) return;
+          const oscC = this.ctx.createOscillator();
+          const gainC = this.ctx.createGain();
+          oscC.type = 'sine';
+          oscC.frequency.setValueAtTime(cFreq, peakNow);
+          gainC.gain.setValueAtTime(0.18, peakNow);
+          gainC.gain.exponentialRampToValueAtTime(0.0001, peakNow + 2.5);
+          oscC.connect(gainC);
+          gainC.connect(this.ctx.destination);
+          oscC.start(peakNow);
+          oscC.stop(peakNow + 2.5);
+        });
+      }, 280);
+
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate?.([60, 80, 80, 100, 120]);
+      }
+    } catch {
+      // AudioContext fail-safe fallback
+    }
+  }
+
   playMove() {
     this.playPlace();
   }

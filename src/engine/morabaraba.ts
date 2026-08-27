@@ -286,6 +286,93 @@ export function detectNewlyFormedMills(
   return newlyFormed;
 }
 
+export const HORIZONTAL_MERIDIAN_POINTS = ['a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4'];
+export const VERTICAL_MERIDIAN_POINTS = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7'];
+
+export interface GrandMeridianResult {
+  isGrandMeridian: boolean;
+  axis: 'horizontal' | 'vertical' | 'diagonal' | null;
+  points: string[];
+  title: string;
+}
+
+export function checkGrandMeridianLine(
+  pointId: string,
+  player: PlayerId,
+  points: Record<string, BoardPoint>,
+  formedMills: MillDefinition[] = []
+): GrandMeridianResult {
+  // 1. Check Horizontal Full Meridian (a4 - b4 - c4 - d4 - e4 - f4 - g4)
+  const horizCount = HORIZONTAL_MERIDIAN_POINTS.filter((id) => points[id]?.piece === player).length;
+  const isHorizInvolved = HORIZONTAL_MERIDIAN_POINTS.includes(pointId);
+  const horizMillsFormed = formedMills.filter((m) =>
+    m.points.every((ptId) => HORIZONTAL_MERIDIAN_POINTS.includes(ptId))
+  );
+
+  if (isHorizInvolved && (horizCount >= 5 || horizMillsFormed.length >= 1 || horizCount === 7)) {
+    if (formedMills.length >= 1 || horizCount >= 6) {
+      return {
+        isGrandMeridian: true,
+        axis: 'horizontal',
+        points: HORIZONTAL_MERIDIAN_POINTS,
+        title: 'GRAND HORIZON DOUBLE MILL',
+      };
+    }
+  }
+
+  // 2. Check Vertical Full Meridian (d1 - d2 - d3 - d4 - d5 - d6 - d7)
+  const vertCount = VERTICAL_MERIDIAN_POINTS.filter((id) => points[id]?.piece === player).length;
+  const isVertInvolved = VERTICAL_MERIDIAN_POINTS.includes(pointId);
+  const vertMillsFormed = formedMills.filter((m) =>
+    m.points.every((ptId) => VERTICAL_MERIDIAN_POINTS.includes(ptId))
+  );
+
+  if (isVertInvolved && (vertCount >= 5 || vertMillsFormed.length >= 1 || vertCount === 7)) {
+    if (formedMills.length >= 1 || vertCount >= 6) {
+      return {
+        isGrandMeridian: true,
+        axis: 'vertical',
+        points: VERTICAL_MERIDIAN_POINTS,
+        title: 'GRAND MERIDIAN DOUBLE MILL',
+      };
+    }
+  }
+
+  // 3. Check for any Collinear Multiple Mills formed in the same axis
+  if (formedMills.length >= 2) {
+    const allMillPoints = formedMills.flatMap((m) => m.points);
+    const uniquePoints = Array.from(new Set(allMillPoints));
+    
+    // Check if all belong to horizontal or vertical axis
+    const allHoriz = uniquePoints.every((id) => HORIZONTAL_MERIDIAN_POINTS.includes(id));
+    if (allHoriz) {
+      return {
+        isGrandMeridian: true,
+        axis: 'horizontal',
+        points: HORIZONTAL_MERIDIAN_POINTS,
+        title: 'GRAND HORIZON DOUBLE MILL',
+      };
+    }
+
+    const allVert = uniquePoints.every((id) => VERTICAL_MERIDIAN_POINTS.includes(id));
+    if (allVert) {
+      return {
+        isGrandMeridian: true,
+        axis: 'vertical',
+        points: VERTICAL_MERIDIAN_POINTS,
+        title: 'GRAND MERIDIAN DOUBLE MILL',
+      };
+    }
+  }
+
+  return {
+    isGrandMeridian: false,
+    axis: null,
+    points: [],
+    title: '',
+  };
+}
+
 export function checkMillsForPoint(pointId: string, player: PlayerId, points: Record<string, BoardPoint>): MillDefinition[] {
   const matchingMills = ALL_MILLS.filter((mill) => {
     if (!mill.points.includes(pointId)) return false;
@@ -379,7 +466,7 @@ export function applyCaptureToGameState(
         phase: 'shooting',
         capturesRemaining: nextCapturesRemaining,
         statusMessage: state.isDoubleMill
-          ? 'DOUBLE MILL! 1 CATTLE TO CAPTURE'
+          ? 'SMOOTH DOUBLE MILL · CAPTURE 2 OF 2'
           : '1 CATTLE TO CAPTURE',
         history: updatedHistory,
       };

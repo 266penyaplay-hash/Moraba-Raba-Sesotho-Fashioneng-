@@ -42,6 +42,7 @@ export interface BottleCapTokenProps {
   isSelected?: boolean;
   isCapturable?: boolean;
   isLastMoved?: boolean;
+  isDoubleMillElevated?: boolean;
   isRoyalSkin?: boolean;
   cattleSet?: CattleSetId;
   viewAngle?: 'top' | 'angled';
@@ -259,6 +260,7 @@ export const BottleCapToken: React.FC<BottleCapTokenProps> = ({
   isSelected = false,
   isCapturable = false,
   isLastMoved = false,
+  isDoubleMillElevated = false,
   isRoyalSkin = false,
   cattleSet = 'heritage',
   viewAngle = 'top',
@@ -525,8 +527,44 @@ export const BottleCapToken: React.FC<BottleCapTokenProps> = ({
           />
         )}
 
+        {/* Double Mill Elevated State: Radiant Dual-Gold Halo & Specular Flash */}
+        {isDoubleMillElevated && (
+          <g>
+            <circle
+              cx="50"
+              cy="50"
+              r="49.5"
+              fill="none"
+              stroke="#FFF2B2"
+              strokeWidth="2.8"
+              strokeDasharray="6 3"
+              className="animate-spin"
+              style={{ transformOrigin: 'center', animationDuration: '6s' }}
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="46.5"
+              fill="none"
+              stroke="#D4AF37"
+              strokeWidth="1.8"
+              className="animate-pulse"
+              opacity="0.9"
+            />
+            {/* Metallic light reflection sweep */}
+            <path
+              d="M15 50 Q 50 15 85 50 Q 50 85 15 50"
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth="1.2"
+              strokeDasharray="14 10"
+              className="animate-pulse opacity-80"
+            />
+          </g>
+        )}
+
         {/* Last Moved State: Shimmering Gold Border & Radiant Ring */}
-        {isLastMoved && !isSelected && !isCapturable && (
+        {isLastMoved && !isSelected && !isCapturable && !isDoubleMillElevated && (
           <g>
             <circle
               cx="50"

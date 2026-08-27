@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BoardPoint, GamePhase, PlayerId, DifficultyStageId, CattleSetId } from '../types';
+import { BoardPoint, GamePhase, PlayerId, DifficultyStageId, CattleSetId, DoubleMillAnimationState } from '../types';
 import { CONNECTION_SEGMENTS } from '../engine/morabaraba';
 import { DIFFICULTY_STAGES } from '../constants/stages';
 import { BottleCapToken } from './BottleCapToken';
@@ -23,6 +23,13 @@ interface GameBoardProps {
   flashMill: [string, string, string] | null;
   activeMillLines?: [string, string, string][];
   lastMove?: LastMoveHighlight | null;
+  doubleMillAnimation?: DoubleMillAnimationState | null;
+  isDoubleMill?: boolean;
+  isGrandMeridian?: boolean;
+  grandMeridianAxis?: 'horizontal' | 'vertical' | 'diagonal' | null;
+  grandMeridianPoints?: string[];
+  capturesRemaining?: number;
+  totalCapturesInSequence?: number;
   onPointClick: (pointId: string) => void;
   lightingAngle?: { x: number; y: number };
   stageId?: DifficultyStageId;
@@ -48,6 +55,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   flashMill,
   activeMillLines = [],
   lastMove = null,
+  doubleMillAnimation = null,
+  isDoubleMill = false,
+  isGrandMeridian = false,
+  grandMeridianAxis = null,
+  grandMeridianPoints = [],
+  capturesRemaining = 0,
+  totalCapturesInSequence = 2,
   onPointClick,
   stageId = 'matenase',
   atmosphere = 'golden-dawn',
@@ -117,6 +131,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     });
     setPrevPointPieces(currentMap);
   }, [points]);
+
+  // Determine active mills to highlight:
+  const doubleMillLines = doubleMillAnimation?.mills || [];
+  const renderedMillLines = doubleMillLines.length > 0 
+    ? doubleMillLines 
+    : activeMillLines.length > 0 
+    ? activeMillLines 
+    : flashMill 
+    ? [flashMill] 
+    : [];
 
   return (
     <div
@@ -224,6 +248,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 <stop offset="100%" stopColor="#8C6838" stopOpacity="0.85" />
               </linearGradient>
 
+              {/* Elegant Old Gold Gradient for Smooth Double Mill */}
+              <linearGradient id="old-gold-double-mill" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#FFF6D1" />
+                <stop offset="30%" stopColor="#D4AF37" />
+                <stop offset="60%" stopColor="#AA7D2A" />
+                <stop offset="85%" stopColor="#D4AF37" />
+                <stop offset="100%" stopColor="#FFF6D1" />
+              </linearGradient>
+
               {/* Radiant Mill Gold Pulse */}
               <linearGradient id="mill-pulse-gold" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stopColor="#FFD700" />
@@ -240,11 +273,49 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 </feMerge>
               </filter>
 
-              {/* Recessed Empty Node Cupule Depression */}
-              <radialGradient id="recessed-socket-depth" cx="40%" cy="35%" r="65%">
-                <stop offset="0%" stopColor="#060504" />
-                <stop offset="60%" stopColor="#100D0A" />
-                <stop offset="100%" stopColor="#1F1811" />
+              {/* Grand Meridian Celestial Laser Gradient */}
+              <linearGradient id="grand-meridian-beam" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FFFFFF" />
+                <stop offset="15%" stopColor="#FFE79A" />
+                <stop offset="50%" stopColor="#FFD700" />
+                <stop offset="85%" stopColor="#FF9800" />
+                <stop offset="100%" stopColor="#FFFFFF" />
+              </linearGradient>
+
+              {/* Grand Meridian Intense Glow Filter */}
+              <filter id="grand-meridian-glow-filter" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="3.0" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="6.5" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Double Mill Grand Glow Filter */}
+              <filter id="double-mill-glow-filter" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="5.0" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Solid Bronze Inlaid Pin Gradient */}
+              <linearGradient id="solid-bronze-pin" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#E5B96E" />
+                <stop offset="50%" stopColor="#A88242" />
+                <stop offset="100%" stopColor="#664B24" />
+              </linearGradient>
+
+              {/* Hover Warm Radiant Glow */}
+              <radialGradient id="hover-warm-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#FFE79A" stopOpacity="0.75" />
+                <stop offset="50%" stopColor="#D5A351" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#A98545" stopOpacity="0" />
               </radialGradient>
 
               {/* Legal Move Glow */}
@@ -323,28 +394,129 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               })}
             </g>
 
-            {/* 3. Center Kraal Subtle Marker at Point d4 (50, 50) */}
-            <g transform="translate(50, 50)" opacity="0.35">
-              <circle cx="0" cy="0" r="3.5" fill="none" stroke="#A98545" strokeWidth="0.6" strokeDasharray="1.5 1.5" />
+            {/* 3. Center Kraal Diamond Emblem at (50, 50) */}
+            <g transform="translate(50, 50)" opacity="0.4">
+              <polygon points="0,-2.6 2.6,0 0,2.6 -2.6,0" fill="#A98545" opacity="0.7" />
+              <circle cx="0" cy="0" r="0.8" fill="#FFE79A" />
             </g>
 
-            {/* 4a. Active Mill Radiant Pulse Line(s) */}
-            {(activeMillLines.length > 0 ? activeMillLines : flashMill ? [flashMill] : []).map((millPoints, mIdx) => (
-              <g key={`mill-pulse-${mIdx}`} stroke="url(#mill-pulse-gold)" strokeWidth="3.2" filter="url(#mill-glow-filter)" className="transition-all duration-300">
-                <line
-                  x1={points[millPoints[0]]?.x ?? 0}
-                  y1={points[millPoints[0]]?.y ?? 0}
-                  x2={points[millPoints[1]]?.x ?? 0}
-                  y2={points[millPoints[1]]?.y ?? 0}
-                />
-                <line
-                  x1={points[millPoints[1]]?.x ?? 0}
-                  y1={points[millPoints[1]]?.y ?? 0}
-                  x2={points[millPoints[2]]?.x ?? 0}
-                  y2={points[millPoints[2]]?.y ?? 0}
-                />
+            {/* 4a. Smooth Double Mill & Active Mill Radiant Pulse Line(s) */}
+            {renderedMillLines.map((millPoints, mIdx) => {
+              const isDoubleMillAnimationActive = Boolean(doubleMillAnimation?.active || isDoubleMill);
+              const p0 = points[millPoints[0]];
+              const p1 = points[millPoints[1]];
+              const p2 = points[millPoints[2]];
+              if (!p0 || !p1 || !p2) return null;
+
+              return (
+                <g key={`mill-pulse-${mIdx}`}>
+                  {/* Underlay Ambient Glow Pulse */}
+                  <line
+                    x1={p0.x}
+                    y1={p0.y}
+                    x2={p1.x}
+                    y2={p1.y}
+                    stroke={isDoubleMillAnimationActive ? 'url(#old-gold-double-mill)' : 'url(#mill-pulse-gold)'}
+                    strokeWidth={isDoubleMillAnimationActive ? 5.2 : 3.8}
+                    filter={isDoubleMillAnimationActive ? 'url(#double-mill-glow-filter)' : 'url(#mill-glow-filter)'}
+                    className="animate-pulse"
+                    opacity={0.85}
+                  />
+                  <line
+                    x1={p1.x}
+                    y1={p1.y}
+                    x2={p2.x}
+                    y2={p2.y}
+                    stroke={isDoubleMillAnimationActive ? 'url(#old-gold-double-mill)' : 'url(#mill-pulse-gold)'}
+                    strokeWidth={isDoubleMillAnimationActive ? 5.2 : 3.8}
+                    filter={isDoubleMillAnimationActive ? 'url(#double-mill-glow-filter)' : 'url(#mill-glow-filter)'}
+                    className="animate-pulse"
+                    opacity={0.85}
+                  />
+
+                  {/* Foreground Crisp Old Gold Stroke */}
+                  <motion.line
+                    x1={p0.x}
+                    y1={p0.y}
+                    x2={p1.x}
+                    y2={p1.y}
+                    stroke={isDoubleMillAnimationActive ? 'url(#old-gold-double-mill)' : 'url(#mill-pulse-gold)'}
+                    strokeWidth={isDoubleMillAnimationActive ? 3.0 : 2.2}
+                    strokeLinecap="round"
+                    initial={isDoubleMillAnimationActive ? { pathLength: 0, opacity: 0 } : false}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 0.7, ease: 'easeOut', delay: mIdx * 0.15 }}
+                  />
+                  <motion.line
+                    x1={p1.x}
+                    y1={p1.y}
+                    x2={p2.x}
+                    y2={p2.y}
+                    stroke={isDoubleMillAnimationActive ? 'url(#old-gold-double-mill)' : 'url(#mill-pulse-gold)'}
+                    strokeWidth={isDoubleMillAnimationActive ? 3.0 : 2.2}
+                    strokeLinecap="round"
+                    initial={isDoubleMillAnimationActive ? { pathLength: 0, opacity: 0 } : false}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 0.7, ease: 'easeOut', delay: mIdx * 0.15 + 0.2 }}
+                  />
+                </g>
+              );
+            })}
+
+            {/* 4a-2. Grand Meridian Continuous Celestial Laser Beam across Full Kraal Axis */}
+            {(isGrandMeridian || doubleMillAnimation?.isGrandMeridian) && (
+              <g className="pointer-events-none">
+                {(() => {
+                  const isHoriz = grandMeridianAxis === 'horizontal' || doubleMillAnimation?.meridianAxis === 'horizontal' || (!grandMeridianAxis && !doubleMillAnimation?.meridianAxis);
+                  const startPt = isHoriz ? points['a4'] : points['d1'];
+                  const endPt = isHoriz ? points['g4'] : points['d7'];
+                  if (!startPt || !endPt) return null;
+
+                  return (
+                    <g key="grand-meridian-axis-beam">
+                      {/* Wide Radiant Gaussian Beam Underlay */}
+                      <line
+                        x1={startPt.x}
+                        y1={startPt.y}
+                        x2={endPt.x}
+                        y2={endPt.y}
+                        stroke="url(#grand-meridian-beam)"
+                        strokeWidth="8.5"
+                        filter="url(#grand-meridian-glow-filter)"
+                        opacity="0.9"
+                        className="animate-pulse"
+                      />
+                      {/* Core Focused Laser Beam Line */}
+                      <motion.line
+                        x1={startPt.x}
+                        y1={startPt.y}
+                        x2={endPt.x}
+                        y2={endPt.y}
+                        stroke="#FFFFFF"
+                        strokeWidth="3.2"
+                        strokeLinecap="round"
+                        initial={{ pathLength: 0, opacity: 0 }}
+                        animate={{ pathLength: 1, opacity: 1 }}
+                        transition={{ duration: 0.5, ease: 'easeInOut' }}
+                      />
+                      {/* Inner High Gold Conduit */}
+                      <motion.line
+                        x1={startPt.x}
+                        y1={startPt.y}
+                        x2={endPt.x}
+                        y2={endPt.y}
+                        stroke="#FFD700"
+                        strokeWidth="1.8"
+                        strokeDasharray="6 3"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.6, ease: 'easeOut' }}
+                      />
+                    </g>
+                  );
+                })()}
               </g>
-            ))}
+            )}
 
             {/* 4b. Recent Move Connecting Travel Trail */}
             {lastMove?.from && lastMove?.to && points[lastMove.from] && points[lastMove.to] && (
@@ -381,11 +553,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               </g>
             )}
 
-            {/* 5. The 24 Clearly Empty Sockets / Nodes */}
+            {/* 5. The 24 Clean & Satisfying Solid Board Intersection Touchpoints */}
             {(Object.values(points || {}) as BoardPoint[]).map((pt) => {
               const isEmpty = pt.piece === null;
               const isTarget = (validTargets || []).includes(pt.id);
-              const isMillMember = flashMill?.includes(pt.id);
+              const isMillMember = renderedMillLines.some((m) => m.includes(pt.id));
               const isOrigin = lastMove?.from === pt.id;
               const isDestination = lastMove?.to === pt.id;
 
@@ -395,24 +567,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   onClick={() => onPointClick(pt.id)}
                   className="cursor-pointer group"
                 >
-                  {/* Recessed Outer Ring */}
+                  {/* Solid Flush Inlaid Bronze Point - Smooth, tactile, completely hole-free */}
                   <circle
                     cx={pt.x}
                     cy={pt.y}
-                    r="3.8"
-                    fill="url(#recessed-socket-depth)"
-                    stroke="#423120"
-                    strokeWidth="0.8"
-                  />
-
-                  {/* Inner Cavity Ring (Clean and Empty - No misleading occupied dots) */}
-                  <circle
-                    cx={pt.x}
-                    cy={pt.y + 0.2}
-                    r="2.6"
-                    fill="#0A0806"
-                    stroke="#1E160E"
+                    r="1.6"
+                    fill="url(#solid-bronze-pin)"
+                    stroke="#593E1A"
                     strokeWidth="0.4"
+                  />
+                  {/* Subtle Specular Micro-Reflection on top edge for tactile metallic feel */}
+                  <circle
+                    cx={pt.x - 0.4}
+                    cy={pt.y - 0.4}
+                    r="0.5"
+                    fill="#FFF3D4"
+                    opacity="0.85"
                   />
 
                   {/* Origin Point: Distinct Departure Highlight Border & Shimmer */}
@@ -469,22 +639,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     </g>
                   )}
 
-                  {/* Hover Cue for Empty Sockets */}
+                  {/* Satisfying Hover Warm Light Expansion on Empty Nodes */}
                   {isEmpty && !isTarget && !isOrigin && (
                     <circle
                       cx={pt.x}
                       cy={pt.y}
-                      r="3.2"
-                      fill="none"
-                      stroke="#8C6838"
-                      strokeWidth="0.6"
-                      className="opacity-0 group-hover:opacity-80 transition-opacity duration-200"
+                      r="3.8"
+                      fill="url(#hover-warm-glow)"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                     />
                   )}
 
-                  {/* Legal Move Target: Soft Warm Glow */}
+                  {/* Legal Move Target: Soothing, Inviting Radiant Golden Beacon */}
                   {isEmpty && isTarget && (
-                    <g className="animate-pulse">
+                    <g className="pointer-events-none animate-pulse">
                       <circle
                         cx={pt.x}
                         cy={pt.y}
@@ -494,11 +662,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       <circle
                         cx={pt.x}
                         cy={pt.y}
-                        r="3.6"
+                        r="3.4"
                         fill="none"
                         stroke="#FFD700"
                         strokeWidth="1.1"
-                        strokeDasharray="2 1.5"
+                        strokeDasharray="2.5 1.5"
+                      />
+                      <circle
+                        cx={pt.x}
+                        cy={pt.y}
+                        r="1.2"
+                        fill="#FFFDF7"
+                        opacity="0.9"
                       />
                     </g>
                   )}
@@ -516,6 +691,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       className="animate-pulse"
                     />
                   )}
+
+                  {/* Grand Meridian Axis Node Ring */}
+                  {(isGrandMeridian || doubleMillAnimation?.isGrandMeridian) && (grandMeridianPoints.includes(pt.id) || doubleMillAnimation?.meridianPoints?.includes(pt.id)) && (
+                    <g className="pointer-events-none">
+                      <circle
+                        cx={pt.x}
+                        cy={pt.y}
+                        r="5.6"
+                        fill="none"
+                        stroke="#FFE79A"
+                        strokeWidth="1.8"
+                        strokeDasharray="4 2"
+                        filter="url(#grand-meridian-glow-filter)"
+                        className="animate-spin origin-center"
+                        style={{ transformOrigin: `${pt.x}px ${pt.y}px` }}
+                      />
+                    </g>
+                  )}
                 </g>
               );
             })}
@@ -531,6 +724,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 const isSelected = selectedPointId === pt.id;
                 const isCapturable = (capturablePoints || []).includes(pt.id);
                 const isLastMoved = lastMove?.to === pt.id;
+                const isDoubleMillCenter = doubleMillAnimation?.centerPointId === pt.id;
 
                 return (
                   <div
@@ -545,6 +739,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      zIndex: isDoubleMillCenter ? 35 : isSelected ? 30 : 20,
                     }}
                     className="pointer-events-auto"
                   >
@@ -555,8 +750,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         opacity: 0,
                       }}
                       animate={{
-                        scale: isSelected ? 1.12 : 1,
-                        y: isSelected ? -6 : 0,
+                        scale: isDoubleMillCenter ? 1.2 : isSelected ? 1.12 : 1,
+                        y: isDoubleMillCenter ? -8 : isSelected ? -6 : 0,
                         opacity: 1,
                       }}
                       exit={{
@@ -572,7 +767,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         mass: 0.7,
                       }}
                       className={`relative flex items-center justify-center rounded-full ${
-                        isLastMoved && !isSelected && !isCapturable
+                        isDoubleMillCenter
+                          ? 'shadow-[0_10px_25px_rgba(212,175,55,0.7),0_0_16px_rgba(255,242,178,0.8)]'
+                          : isLastMoved && !isSelected && !isCapturable
                           ? 'shadow-[0_0_14px_rgba(255,215,0,0.55)]'
                           : ''
                       }`}
@@ -583,6 +780,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         isSelected={isSelected}
                         isCapturable={isCapturable}
                         isLastMoved={isLastMoved}
+                        isDoubleMillElevated={isDoubleMillCenter}
                         isRoyalSkin={isRoyalSkin}
                         cattleSet={cattleSet}
                         onClick={() => onPointClick(pt.id)}
@@ -593,8 +791,88 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               })}
             </AnimatePresence>
           </div>
+
+          {/* =================================================================== */}
+          {/* 7. LUXURY "SMOOTH DOUBLE MILL" & "GRAND HORIZON" ANNOUNCEMENT BANNER */}
+          {/* =================================================================== */}
+          <AnimatePresence>
+            {doubleMillAnimation?.active && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.78, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: -12 }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className={`absolute inset-x-3 sm:inset-x-6 top-1/2 -translate-y-1/2 z-50 pointer-events-none flex flex-col items-center justify-center text-center px-4 py-3.5 rounded-2xl border-2 backdrop-blur-md ${
+                  doubleMillAnimation?.isGrandMeridian || isGrandMeridian
+                    ? 'bg-[#140A04]/95 border-[#FFD700] shadow-[0_20px_60px_rgba(255,215,0,0.6),0_0_40px_rgba(0,0,0,0.95)]'
+                    : 'bg-[#140D08]/95 border-[#D4AF37] shadow-[0_16px_50px_rgba(212,175,55,0.45),0_0_30px_rgba(0,0,0,0.95)]'
+                }`}
+              >
+                {doubleMillAnimation?.isGrandMeridian || isGrandMeridian ? (
+                  <>
+                    <div className="flex items-center gap-1.5 text-[#FFD700] text-[10px] font-['Space_Grotesk'] font-extrabold uppercase tracking-widest">
+                      <span className="text-[#FFE79A] animate-pulse">⚡</span>
+                      <span>LEKHALA LA METSI · GRAND HORIZON</span>
+                      <span className="text-[#FFE79A] animate-pulse">⚡</span>
+                    </div>
+                    <div className="font-['Syne'] font-extrabold text-xl sm:text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#FFFFFF] via-[#FFE79A] to-[#FFD700] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] uppercase mt-0.5">
+                      Grand Horizon Double Mill
+                    </div>
+                    <div className="text-[11px] font-['Space_Grotesk'] text-[#FFE79A] font-bold mt-1 flex items-center gap-1.5">
+                      <span className="px-2 py-0.5 bg-[#FFD700]/20 rounded-full border border-[#FFD700]/50 text-[#FFF6D1]">Unbroken Kraal Meridian</span>
+                      <span>·</span>
+                      <span className="text-[#52C41A] font-extrabold">2 Consecutive Captures</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-1.5 text-[#FFE79A] text-[10px] font-['Space_Grotesk'] font-extrabold uppercase tracking-widest">
+                      <span className="text-[#D4AF37]">✦</span>
+                      <span>TWIN KRAAL STRIKE</span>
+                      <span className="text-[#D4AF37]">✦</span>
+                    </div>
+                    <div className="font-['Syne'] font-extrabold text-xl sm:text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#FFFDF8] via-[#FFE79A] to-[#D4AF37] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] uppercase mt-0.5">
+                      Smooth Double Mill
+                    </div>
+                    <div className="text-[11px] font-['Space_Grotesk'] text-[#D5A351] font-semibold mt-1 flex items-center gap-1.5">
+                      <span>2 Mills Synchronized</span>
+                      <span>·</span>
+                      <span className="text-[#FFE79A] font-bold">2 Consecutive Captures</span>
+                    </div>
+                  </>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* =================================================================== */}
+          {/* 8. SEQUENTIAL TWO-CAPTURE OVERLAY PILL */}
+          {/* =================================================================== */}
+          <AnimatePresence>
+            {isDoubleMill && !doubleMillAnimation?.active && capturesRemaining > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="absolute top-2 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
+              >
+                <div className="px-3.5 py-1 rounded-full bg-[#1A120B]/95 border border-[#D4AF37] shadow-[0_4px_16px_rgba(212,175,55,0.35)] flex items-center gap-2 text-[11px] font-['Space_Grotesk'] font-bold text-[#FFE79A]">
+                  <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-ping" />
+                  <span>
+                    CAPTURE {totalCapturesInSequence - capturesRemaining + 1} OF {totalCapturesInSequence}
+                  </span>
+                  <div className="flex items-center gap-1 ml-1">
+                    <span className={`w-2 h-2 rounded-full border border-[#D4AF37] ${capturesRemaining <= 1 ? 'bg-[#D4AF37]' : 'bg-transparent'}`} />
+                    <span className={`w-2 h-2 rounded-full border border-[#D4AF37] ${capturesRemaining === 0 ? 'bg-[#D4AF37]' : 'bg-transparent'}`} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
         </div>
       </motion.div>
     </div>
   );
 };
+

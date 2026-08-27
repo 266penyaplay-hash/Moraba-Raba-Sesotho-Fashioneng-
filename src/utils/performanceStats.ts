@@ -35,6 +35,22 @@ export function computeMatchPerformanceStats(
     (h) => h.player === 'ivory' && h.millFormed === true
   ).length;
 
+  const playerDoubleMills = history.filter(
+    (h) => h.player === 'obsidian' && (h as any).doubleMill === true
+  ).length;
+
+  const opponentDoubleMills = history.filter(
+    (h) => h.player === 'ivory' && (h as any).doubleMill === true
+  ).length;
+
+  const playerGrandMeridianMills = history.filter(
+    (h) => h.player === 'obsidian' && ((h as any).grandMeridian === true || (h as any).isGrandMeridian === true)
+  ).length;
+
+  const opponentGrandMeridianMills = history.filter(
+    (h) => h.player === 'ivory' && ((h as any).grandMeridian === true || (h as any).isGrandMeridian === true)
+  ).length;
+
   // Fallback if millFormed flags were skipped: infer from captures
   const playerCaptures = gameState.ivory.captured ?? 0;
   const opponentCaptures = gameState.obsidian.captured ?? 0;
@@ -163,6 +179,10 @@ export function computeMatchPerformanceStats(
     opponentMoves,
     playerMills,
     opponentMills,
+    playerDoubleMills,
+    opponentDoubleMills,
+    playerGrandMeridianMills,
+    opponentGrandMeridianMills,
     playerCaptures,
     opponentCaptures,
     playerMovesPerMill,

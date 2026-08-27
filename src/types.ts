@@ -36,6 +36,7 @@ export interface GameHistoryEntry {
   type: 'place' | 'move' | 'shoot';
   millFormed?: boolean;
   doubleMill?: boolean;
+  grandMeridian?: boolean;
   capturesEarned?: number;
   mills?: [string, string, string][];
 }
@@ -222,6 +223,17 @@ export interface PlayerProgression {
   winStreak: WinStreakState;
 }
 
+export interface DoubleMillAnimationState {
+  active: boolean;
+  player: PlayerId;
+  centerPointId: string;
+  mills: [string, string, string][];
+  stage: 'drawing' | 'pulsing' | 'capturing';
+  isGrandMeridian?: boolean;
+  meridianAxis?: 'horizontal' | 'vertical' | 'diagonal' | null;
+  meridianPoints?: string[];
+}
+
 export interface GameState {
   points: Record<string, BoardPoint>;
   turn: PlayerId;
@@ -230,7 +242,12 @@ export interface GameState {
   forcedOpening: ForcedOpeningState | null;
   pendingMillCount: number;
   capturesRemaining?: number;
+  totalCapturesInSequence?: number;
   isDoubleMill?: boolean;
+  doubleMillAnimation?: DoubleMillAnimationState | null;
+  isGrandMeridian?: boolean;
+  grandMeridianAxis?: 'horizontal' | 'vertical' | 'diagonal' | null;
+  grandMeridianPoints?: string[];
   obsidian: PlayerState;
   ivory: PlayerState;
   selectedPointId: string | null;
@@ -253,6 +270,10 @@ export interface MatchPerformanceStats {
   opponentMoves: number;
   playerMills: number;
   opponentMills: number;
+  playerDoubleMills?: number;
+  opponentDoubleMills?: number;
+  playerGrandMeridianMills?: number;
+  opponentGrandMeridianMills?: number;
   playerCaptures: number;
   opponentCaptures: number;
   playerMovesPerMill: number | null; // e.g. 4.2 moves / mill
@@ -306,6 +327,7 @@ export interface CareerModeStats {
   millsFormed: number;
   millsPrevented: number;
   cattleCaptured: number;
+  grandMeridianCount?: number;
   rating: number;
 }
 
@@ -343,6 +365,10 @@ export interface DetailedMatchRecord {
   opponentCaptures: number;
   playerMills: number;
   opponentMills: number;
+  playerDoubleMills?: number;
+  opponentDoubleMills?: number;
+  playerGrandMeridianMills?: number;
+  opponentGrandMeridianMills?: number;
   ratingBefore: number;
   ratingAfter: number;
   ratingDelta: number;
